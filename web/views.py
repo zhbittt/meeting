@@ -51,6 +51,26 @@ def auth_json(func):
     return inner
 
 
+def register(request):
+    """
+    注册
+    :param request:
+    :return:
+    """
+    if request.method == "GET":
+        form = LoginForm()
+        return render(request, 'register.html', {"form": form})
+    else:
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data.get("name")
+            password = form.cleaned_data.get("password")
+            models.UserInfo.objects.create(name=name, password=password)
+            return redirect('/login/')
+        else:
+            return render(request, 'register.html', {"form": form})
+
+
 def login(request):
     """
     用户登录
@@ -105,11 +125,9 @@ def booking(request):
             if fetch_date < current_date:
                 raise Exception('查询时间不能是以前的时间')
 
-
             booking_list = models.Booking.objects.filter(booking_date=fetch_date).select_related('user',
                                                                                                  'room').order_by(
                 'booking_time')
-            print("booking_list",booking_list)
             booking_dict = {}
             for item in booking_list:
                 if item.room_id not in booking_dict:
@@ -117,7 +135,6 @@ def booking(request):
                 else:
                     if item.booking_time not in booking_dict[item.room_id]:
                         booking_dict[item.room_id][item.booking_time] = {'name': item.user.name, 'id': item.user.id}
-            print("booking_dict",booking_dict)
             """
             {
                 room_id:{
@@ -154,7 +171,6 @@ def booking(request):
             booking_date = datetime.datetime.strptime(booking_date, '%Y-%m-%d').date()
             if booking_date < current_date:
                 raise Exception('查询时间不能是以前的时间')
-
 
             booking_info = json.loads(request.POST.get('data'))
 
@@ -199,13 +215,6 @@ def booking(request):
             ret['msg'] = '预定失败：%s' % str(e)
 
     return JsonResponse(ret)
-
-
-
-
-
-
-
 
 # 1. 为了方面员工使用公司会议室。网上预定减少排队等候时间。
 # 2.预定的会议室使用时间为一小时，可选时间段在8:00~20:00。其余时间不用预定。

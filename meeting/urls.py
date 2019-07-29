@@ -20,6 +20,7 @@ from web import views
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^login/', views.login),
+    url(r'^register/', views.register),
     url(r'^index/', views.index),
     url(r'^booking/', views.booking),
 ]
